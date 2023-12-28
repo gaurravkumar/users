@@ -11,10 +11,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,6 +33,9 @@ class UserControllerTest {
     @InjectMocks
     private UserController userController;
 
+    @Mock
+    BindingResult bindingResult;
+
     UserOutputDTO userOutputDTO;
     UserInputDTO userInputDTO;
 
@@ -41,15 +48,28 @@ class UserControllerTest {
     @Test
     void registerUser() {
         when(userServiceMock.register(any(UserInputDTO.class))).thenReturn(userOutputDTO);
-        ResponseEntity<UserOutputDTO> userOutputDTOResponseEntity = userController.registerUser(userInputDTO);
+        ResponseEntity<UserOutputDTO> userOutputDTOResponseEntity = userController.registerUser(userInputDTO, bindingResult);
         assertNotNull(userOutputDTOResponseEntity);
         assertTrue(userOutputDTOResponseEntity.getStatusCode().is2xxSuccessful());
     }
 
     @Test
+    void registerUserFieldsEmptyWhileRegistrationErrorResponse() {
+        FieldError fieldError = new FieldError("userInputDTO","name","Blank prohibited");
+        FieldError fieldError2 = new FieldError("userInputDTO","email","Blank prohibited");
+        FieldError fieldError3 = new FieldError("userInputDTO","password","Blank prohibited");
+        when(bindingResult.hasErrors()).thenReturn(true);
+        when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError,fieldError2,fieldError3));
+        ResponseEntity<UserOutputDTO> userOutputDTOResponseEntity = userController.registerUser(userInputDTO, bindingResult);
+        assertNotNull(userOutputDTOResponseEntity);
+        assertTrue(userOutputDTOResponseEntity.getBody().error().contains("Blank prohibited"));
+        assertTrue(userOutputDTOResponseEntity.getStatusCode().is4xxClientError());
+    }
+
+    @Test
     void registerUserWhenUserServiceThrowException() {
         when(userServiceMock.register(any(UserInputDTO.class))).thenThrow(UserException.class);
-        ResponseEntity<UserOutputDTO> userOutputDTOResponseEntity = userController.registerUser(userInputDTO);
+        ResponseEntity<UserOutputDTO> userOutputDTOResponseEntity = userController.registerUser(userInputDTO, bindingResult);
         assertNotNull(userOutputDTOResponseEntity);
         assertTrue(userOutputDTOResponseEntity.getStatusCode().is4xxClientError());
     }

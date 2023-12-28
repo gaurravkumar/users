@@ -1,11 +1,18 @@
 package com.prototype.users.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
-public record UserInputDTO(String name, String email, String password, String token) {
+public record UserInputDTO(@NotBlank(message = "Name cannot be blank") String name,
+                           @NotBlank(message = "Email cannot be blank") String email,
+                           @NotBlank(message = "Password cannot be blank") String password,
+                           String token) {
+
     public UserInputDTO withUpdatedToken(String randomUUID) {
         return new UserInputDTO(this.name, this.email, hashPassword(this.password), randomUUID);
     }
