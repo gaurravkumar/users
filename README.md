@@ -31,5 +31,6 @@ Sample Request:
 - Build the Project
 - Start the project
 
-## More on Eureka Server Project folder
+## More Information
+[READ ME FOR DETAILS](https://github.com/gaurravkumar/staticArtifacts/blob/main/BID%20SYSTEM.docx)
 
